@@ -2,7 +2,10 @@ package input_autocomplete
 
 import (
 	"fmt"
+	"os"
 	"runtime"
+
+	"golang.org/x/term"
 )
 
 type Input struct {
@@ -84,10 +87,45 @@ func (i *Input) Autocomplete() {
 		}
 	}
 
-	i.currentText = i.matches[i.cyclingPos]
-	i.cyclingPos = (i.cyclingPos + 1) % len(i.matches)
-	i.cursor.SetPosition(len(i.currentText))
-	i.Print()
+	i.PrintAllMatches()
+	// i.currentText = i.matches[i.cyclingPos]
+	// i.cyclingPos = (i.cyclingPos + 1) % len(i.matches)
+	// i.cursor.SetPosition(len(i.currentText))
+	// i.Print()
+}
+
+func (i *Input) PrintAllMatches() {
+	var max_len int
+
+	width, _, err := term.GetSize(int(os.Stdout.Fd()))
+	if err != nil {
+		fmt.Println("Impossible de récupérer la taille du terminal :", err)
+		return
+	}
+
+	for _, match := range i.matches {
+		if len(match) > max_len {
+			max_len = len(match)
+		}
+	}
+
+	display_slice := make([]string, max_len)
+	res := ""
+	fmt.Print("\033[G\033[K")
+
+	for i, match := range i.matches {
+		display_slice[i] = match
+		for j := 0; j < max_len-len(match); j++ {
+			display_slice[i] += " "
+		}
+		if len(res)+len(display_slice[i]) > width {
+			fmt.Println(res)
+			res = ""
+		} else {
+			res += display_slice[i]
+		}
+	}
+	fmt.Println(res)
 }
 
 func (i *Input) RemoveLastSlashIfNeeded() {
