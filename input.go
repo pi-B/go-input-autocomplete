@@ -9,22 +9,26 @@ import (
 )
 
 type Input struct {
-	cursor      *Cursor
-	fixedText   string
-	currentText string
-	isCycling   bool
-	cyclingPos  int
-	matches     []string
+	cursor           *Cursor
+	fixedText        string
+	currentText      string
+	isCycling        bool
+	cyclingPos       int
+	matches          []string
+	hasMultiline     bool
+	lastAutocomplete string
 }
 
 func NewInput(fixedText string) *Input {
 	return &Input{
-		cursor:      NewCursor(),
-		fixedText:   fixedText,
-		currentText: "",
-		isCycling:   false,
-		cyclingPos:  0,
-		matches:     []string{},
+		cursor:           NewCursor(),
+		fixedText:        fixedText,
+		currentText:      "",
+		isCycling:        false,
+		cyclingPos:       0,
+		matches:          []string{},
+		hasMultiline:     false,
+		lastAutocomplete: "",
 	}
 }
 
@@ -87,7 +91,32 @@ func (i *Input) Autocomplete() {
 		}
 	}
 
-	i.PrintAllMatches()
+	if i.currentText != i.lastAutocomplete {
+		if len(i.matches) == 1 {
+			fmt.Print("\033[J\033[G\033[K")
+			fmt.Print(i.fixedText + i.matches[0])
+			i.currentText = i.matches[0]
+			i.hasMultiline = false
+		} else {
+			i.PrintAllMatches()
+			i.lastAutocomplete = i.currentText
+		}
+		// i.cursor.SetPosition(len(i.fixedText) + len(i.currentText))
+		// fmt.Printf("lenght currentText : %v", len(i.currentText))
+		i.cursor.SetPosition(len(i.currentText))
+
+		// for {
+		// 	if len(i.fixedText)+len(i.currentText) > i.cursor.GetPosition() {
+		// 		i.MoveCursorRight()
+		// 	} else {
+		// 		break
+		// 	}
+		// }
+	}
+	// else {
+	// 	fmt.Println("current : " + i.currentText)
+	// 	fmt.Println("lastAutoComplete : " + i.lastAutocomplete)
+	// }
 	// i.currentText = i.matches[i.cyclingPos]
 	// i.cyclingPos = (i.cyclingPos + 1) % len(i.matches)
 	// i.cursor.SetPosition(len(i.currentText))
@@ -111,21 +140,35 @@ func (i *Input) PrintAllMatches() {
 
 	display_slice := make([]string, max_len)
 	res := ""
-	fmt.Print("\033[G\033[K")
+	current_line := ""
+	line_nb := 1
 
-	for i, match := range i.matches {
-		display_slice[i] = match
-		for j := 0; j < max_len-len(match); j++ {
-			display_slice[i] += " "
+	for j, match := range i.matches {
+		display_slice[j] = match
+		for k := 0; k < max_len-len(match); k++ {
+			display_slice[j] += " "
 		}
-		if len(res)+len(display_slice[i]) > width {
-			fmt.Println(res)
-			res = ""
+		if len(current_line)+len(display_slice[j]) > width {
+			res += current_line + "\n"
+			current_line = ""
+			line_nb++
+			i.hasMultiline = true
 		} else {
-			res += display_slice[i]
+			current_line += display_slice[j] + " "
 		}
 	}
-	fmt.Println(res)
+	res += current_line
+	fmt.Print("\033[G\033[K")
+	fmt.Println("")
+	fmt.Print(res)
+	if i.hasMultiline {
+		fmt.Print("\033[J")
+	}
+	fmt.Printf("\033[%vA\033[G", line_nb) //remet le curseur au début de la premiere ligne mais i.cursor.SetPosition(len(i.currentText)) devrait le mettre à la fin du texte actuel
+	if line_nb > 1 {
+		i.hasMultiline = true
+	}
+	fmt.Print(i.fixedText + i.currentText)
 }
 
 func (i *Input) RemoveLastSlashIfNeeded() {
