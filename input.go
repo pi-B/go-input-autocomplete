@@ -123,7 +123,7 @@ func (i *Input) PrintAllMatches() {
 		}
 	}
 
-	display_slice := make([]string, max_len)
+	display_slice := make([]string, len(i.matches))
 	res := ""
 	current_line := ""
 	line_nb := 1
