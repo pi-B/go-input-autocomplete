@@ -101,26 +101,11 @@ func (i *Input) Autocomplete() {
 			i.PrintAllMatches()
 			i.lastAutocomplete = i.currentText
 		}
-		// i.cursor.SetPosition(len(i.fixedText) + len(i.currentText))
-		// fmt.Printf("lenght currentText : %v", len(i.currentText))
+
 		i.cursor.SetPosition(len(i.currentText))
 
-		// for {
-		// 	if len(i.fixedText)+len(i.currentText) > i.cursor.GetPosition() {
-		// 		i.MoveCursorRight()
-		// 	} else {
-		// 		break
-		// 	}
-		// }
 	}
-	// else {
-	// 	fmt.Println("current : " + i.currentText)
-	// 	fmt.Println("lastAutoComplete : " + i.lastAutocomplete)
-	// }
-	// i.currentText = i.matches[i.cyclingPos]
-	// i.cyclingPos = (i.cyclingPos + 1) % len(i.matches)
-	// i.cursor.SetPosition(len(i.currentText))
-	// i.Print()
+
 }
 
 func (i *Input) PrintAllMatches() {
@@ -128,13 +113,13 @@ func (i *Input) PrintAllMatches() {
 
 	width, _, err := term.GetSize(int(os.Stdout.Fd()))
 	if err != nil {
-		fmt.Println("Impossible de récupérer la taille du terminal :", err)
+		fmt.Println("Can't get the terminal size :", err)
 		return
 	}
 
 	for _, match := range i.matches {
 		if len(match) > max_len {
-			max_len = len(match)
+			max_len = len(match) + 1
 		}
 	}
 
@@ -164,7 +149,7 @@ func (i *Input) PrintAllMatches() {
 	if i.hasMultiline {
 		fmt.Print("\033[J")
 	}
-	fmt.Printf("\033[%vA\033[G", line_nb) //remet le curseur au début de la premiere ligne mais i.cursor.SetPosition(len(i.currentText)) devrait le mettre à la fin du texte actuel
+	fmt.Printf("\033[%vA\033[G", line_nb)
 	if line_nb > 1 {
 		i.hasMultiline = true
 	}
