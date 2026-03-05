@@ -79,6 +79,14 @@ func (i *Input) MoveCursorRight() {
 }
 
 func (i *Input) Autocomplete() {
+
+	if i.currentText[:2] == "~/" {
+		if err := i.replaceHomeShortcut(); err != nil {
+			fmt.Println("Error when replacing ~/ in " + i.currentText + " : " + err.Error())
+			return
+		}
+	}
+
 	if !i.isCycling {
 		i.isCycling = true
 		i.cyclingPos = 0
@@ -171,6 +179,17 @@ func (i *Input) RemoveLastSlashIfNeeded() {
 	if size > 0 && i.currentText[size-1] == slash {
 		i.currentText = i.currentText[:size-1]
 	}
+}
+
+func (i *Input) replaceHomeShortcut() error {
+	home_dir, err := os.UserHomeDir()
+	if err != nil {
+		return err
+	}
+
+	i.currentText = home_dir + "/" + i.currentText[2:]
+
+	return nil
 }
 
 func (i *Input) Print() {
