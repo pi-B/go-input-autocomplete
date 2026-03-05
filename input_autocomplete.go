@@ -30,6 +30,7 @@ func keyboardListener(input *Input) error {
 		case keyboard.KeyTab:
 			input.Autocomplete()
 		case keyboard.KeyCtrlC:
+			fmt.Print("\033[J\033[G\033[K")
 			return errors.New("Aborted")
 		case keyboard.KeySpace:
 			input.AddChar(32) // rune for space char
